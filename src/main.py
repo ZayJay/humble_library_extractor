@@ -12,10 +12,12 @@ def run_selenium():
     driver = webdriver.Firefox()
     driver.get('https://www.humblebundle.com/login')
 
+    # Cookie Popup
     wait_until_element_is_interactable(driver, By.ID, "onetrust-accept-btn-handler", 5)
     cookie_consent_button = driver.find_element(By.ID, "onetrust-accept-btn-handler")
     click_when_interactable(driver, cookie_consent_button)
 
+    # Sign-in
     username_input = driver.find_element(By.NAME, "username")
     enter_text_when_interactable(driver, username_input, "Zajac.Steven@gmail.com")
 
@@ -26,6 +28,26 @@ def run_selenium():
 
     submit_button = driver.find_element(By.CLASS_NAME, "flat-cta-button")
     click_when_interactable(driver, submit_button)
+
+    # 2FA
+    wait_until_element_is_interactable(driver, By.CLASS_NAME, "twofactor-form-view", 5)
+    verification_code_input = driver.find_element(By.CLASS_NAME, "text-input")
+    verification_code = input("Enter verification code:")
+    enter_text_when_interactable(driver, verification_code_input, verification_code)
+
+    button_verify = None
+    buttons = driver.find_elements(By.TAG_NAME, "button")
+
+    for button in buttons:
+        if button.get_attribute("type") == "submit" and button.text == "VERIFY":
+            button_verify = button
+
+    if button_verify is not None:
+        click_when_interactable(driver, button_verify)
+    else:
+        print("Could not find 'Verify' button!")
+
+    # Purchases tab
 
     input("Press Enter to continue...")
 
