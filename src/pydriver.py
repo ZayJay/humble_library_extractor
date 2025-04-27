@@ -61,6 +61,7 @@ class PyDriver:
         print("Gamekeys....:")
         print(gamekeys)
 
+        print("Get gamekey details:")
         all_orders_url = ORDER_URL.format('all_tpkds=true&gamekeys=' + '&gamekeys='.join(gamekeys))
         print(all_orders_url)
 
@@ -70,7 +71,44 @@ class PyDriver:
         with open('/Users/szajac/hbrx.json', 'w') as f:
             f.write(str(data))
         f.close()
-        #
-        # gamekeys = dict(data).keys()
-        # print("Retrieved gamekeys....")
-        # print(gamekeys)
+
+        key_details = {}
+        for gamekey in data.keys():
+            key_details[gamekey] = {}
+            key_details[gamekey]['product'] = {}
+            key_details[gamekey]['product']['machine_name'] = data[gamekey]['product']['machine_name']
+            key_details[gamekey]['product']['human_name'] = data[gamekey]['product']['human_name']
+            key_details[gamekey]['subproducts'] = []
+            if 'subproducts' in data[gamekey]:
+                for subproduct in data[gamekey]['subproducts']:
+                    subproduct_details = {}
+                    subproduct_details['human_name'] = subproduct['human_name']
+                    subproduct_details['machine_name'] = subproduct['machine_name']
+
+                    subproduct_details['downloads'] = {}
+                    for download in subproduct['downloads']:
+                        download_struct = download['download_struct']
+                        for ds in download_struct:
+                            if 'name' not in ds:
+                                subproduct_details['downloads']['status'] = 'Download \'name\' not found'
+                            else:
+                                if ds['name'] not in subproduct_details['downloads']:
+                                    subproduct_details['downloads'][ds['name']] = {}
+                                    subproduct_details['downloads'][ds['name']]['web_url'] = ds['url']['web']
+                                    subproduct_details['downloads'][ds['name']]['sha1'] = safe_get_key(ds, 'sha1')
+                                    subproduct_details['downloads'][ds['name']]['md5'] = safe_get_key(ds, 'md5')
+                                    subproduct_details['downloads'][ds['name']]['file_size'] = safe_get_key(ds, 'file_size')
+                                    subproduct_details['downloads'][ds['name']]['human_size'] = safe_get_key(ds, 'human_size')
+                                    subproduct_details['downloads'][ds['name']]['small'] = safe_get_key(ds, 'small')
+
+                    key_details[gamekey]['subproducts'].append(subproduct_details)
+
+        with open('/Users/szajac/key_details.txt', 'w') as f:
+            f.write(str(data))
+        f.close()
+
+def safe_get_key(dict, key):
+    if key in dict:
+        return dict[key]
+    else:
+        return "Key '{0}' not found".format(key)
